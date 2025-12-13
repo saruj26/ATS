@@ -9,14 +9,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key-for-dev')
 
-DEBUG=True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    ".railway.app",
-    "*",
-]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '.railway.app,localhost,127.0.0.1').split(',')
 
 USE_SQLITE = os.getenv('USE_SQLITE', 'False') == 'True'
 
