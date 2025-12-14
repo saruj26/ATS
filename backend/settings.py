@@ -42,11 +42,13 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+
+    'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -129,10 +131,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
     "https://*.vercel.app",
+    "https://applicant-tracking-system-beryl-nine.vercel.app",
+    "https://applicant-tracking-system-nanthi.vercel.app",
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.railway.app",
-    "https://*.vercel.app",
+    "https://ats-production-server.up.railway.app",
+   "https://applicant-tracking-system-beryl-nine.vercel.app",
+    "https://applicant-tracking-system-nanthi.vercel.app",
+
 ]
 
 CORS_ALLOW_CREDENTIALS = True
