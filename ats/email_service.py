@@ -6,6 +6,10 @@ Handles both application confirmations and status update notifications.
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
+import logging
+import smtplib
+
+logger = logging.getLogger(__name__)
 
 
 def send_application_confirmation_email(applicant_data, job_title, applicant_email):
@@ -92,13 +96,26 @@ Nanthi Ventures Recruitment Team
             fail_silently=False,
         )
         
+        logger.info(f"Application confirmation email sent to {applicant_email}")
         return {
             'success': True,
             'message': 'Confirmation email sent successfully'
         }
         
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(f"Gmail authentication failed: {str(e)}. Check EMAIL_HOST_USER and EMAIL_HOST_PASSWORD.")
+        return {
+            'success': False,
+            'error': f'Email authentication failed: {str(e)}'
+        }
+    except smtplib.SMTPException as e:
+        logger.error(f"SMTP error sending confirmation email: {str(e)}")
+        return {
+            'success': False,
+            'error': f'Email service error: {str(e)}'
+        }
     except Exception as e:
-        print(f"Error sending application confirmation email: {str(e)}")
+        logger.error(f"Error sending application confirmation email: {str(e)}")
         return {
             'success': False,
             'error': str(e)
@@ -205,13 +222,26 @@ Nanthi Ventures Recruitment Team
             fail_silently=False,
         )
         
+        logger.info(f"Status update email sent to {applicant_email} for status: {new_status}")
         return {
             'success': True,
             'message': 'Status update email sent successfully'
         }
         
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(f"Gmail authentication failed: {str(e)}. Check EMAIL_HOST_USER and EMAIL_HOST_PASSWORD.")
+        return {
+            'success': False,
+            'error': f'Email authentication failed: {str(e)}'
+        }
+    except smtplib.SMTPException as e:
+        logger.error(f"SMTP error sending status update email: {str(e)}")
+        return {
+            'success': False,
+            'error': f'Email service error: {str(e)}'
+        }
     except Exception as e:
-        print(f"Error sending status update email: {str(e)}")
+        logger.error(f"Error sending status update email: {str(e)}")
         return {
             'success': False,
             'error': str(e)
