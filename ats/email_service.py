@@ -87,20 +87,29 @@ Best regards,
 Nanthi Ventures Recruitment Team
         """
         
-        send_mail(
+        # Use fail_silently=True to prevent connection errors from crashing
+        # On Railway or environments where SMTP might be blocked
+        result = send_mail(
             subject=subject,
             message=message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[applicant_email],
             html_message=html_message,
-            fail_silently=False,
+            fail_silently=True,  # Don't raise exceptions, log them instead
         )
         
-        logger.info(f"Application confirmation email sent to {applicant_email}")
-        return {
-            'success': True,
-            'message': 'Confirmation email sent successfully'
-        }
+        if result:
+            logger.info(f"Application confirmation email sent to {applicant_email}")
+            return {
+                'success': True,
+                'message': 'Confirmation email sent successfully'
+            }
+        else:
+            logger.warning(f"Failed to send confirmation email to {applicant_email} (SMTP might be blocked)")
+            return {
+                'success': False,
+                'error': 'Email service unavailable - SMTP connection failed'
+            }
         
     except smtplib.SMTPAuthenticationError as e:
         logger.error(f"Gmail authentication failed: {str(e)}. Check EMAIL_HOST_USER and EMAIL_HOST_PASSWORD.")
@@ -213,20 +222,29 @@ Best regards,
 Nanthi Ventures Recruitment Team
         """
         
-        send_mail(
+        # Use fail_silently=True to prevent connection errors from crashing
+        # On Railway or environments where SMTP might be blocked
+        result = send_mail(
             subject=subject,
             message=message,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[applicant_email],
             html_message=html_message,
-            fail_silently=False,
+            fail_silently=True,  # Don't raise exceptions, log them instead
         )
         
-        logger.info(f"Status update email sent to {applicant_email} for status: {new_status}")
-        return {
-            'success': True,
-            'message': 'Status update email sent successfully'
-        }
+        if result:
+            logger.info(f"Status update email sent to {applicant_email} for status: {new_status}")
+            return {
+                'success': True,
+                'message': 'Status update email sent successfully'
+            }
+        else:
+            logger.warning(f"Failed to send status update email to {applicant_email} (SMTP might be blocked)")
+            return {
+                'success': False,
+                'error': 'Email service unavailable - SMTP connection failed'
+            }
         
     except smtplib.SMTPAuthenticationError as e:
         logger.error(f"Gmail authentication failed: {str(e)}. Check EMAIL_HOST_USER and EMAIL_HOST_PASSWORD.")
