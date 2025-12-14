@@ -15,7 +15,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '.railway.app,localhost,127.0.0.1').s
 
 USE_SQLITE = os.getenv('USE_SQLITE', 'False') == 'True'
 
-# Email
+# Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
@@ -23,6 +23,27 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Debug email configuration (for Railway deployment troubleshooting)
+import sys
+if '--help' not in sys.argv and 'collectstatic' not in sys.argv:
+    print("=" * 60)
+    print("EMAIL CONFIGURATION CHECK")
+    print("=" * 60)
+    print(f"EMAIL_HOST: {EMAIL_HOST}")
+    print(f"EMAIL_PORT: {EMAIL_PORT}")
+    print(f"EMAIL_USE_TLS: {EMAIL_USE_TLS}")
+    print(f"EMAIL_HOST_USER: {'✓ Set' if EMAIL_HOST_USER else '✗ NOT SET'}")
+    print(f"EMAIL_HOST_USER Value: {EMAIL_HOST_USER if EMAIL_HOST_USER else 'None'}")
+    print(f"EMAIL_HOST_PASSWORD: {'✓ Set (' + str(len(EMAIL_HOST_PASSWORD)) + ' chars)' if EMAIL_HOST_PASSWORD else '✗ NOT SET'}")
+    print(f"DEFAULT_FROM_EMAIL: {DEFAULT_FROM_EMAIL}")
+    print("=" * 60)
+    
+    # Warn if email credentials are missing
+    if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+        print("⚠️  WARNING: Email credentials not found in environment variables!")
+        print("⚠️  Add EMAIL_HOST_USER and EMAIL_HOST_PASSWORD to Railway environment variables")
+        print("=" * 60)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -175,4 +196,36 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20
 }
 
-
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'ats': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}

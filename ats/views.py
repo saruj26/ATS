@@ -12,6 +12,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 import csv
 from datetime import datetime, timedelta
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 from .models import Job, Applicant
 from .serializers import (
@@ -184,17 +187,29 @@ class ApplicantViewSet(viewsets.ModelViewSet):
                 applicant.notes = notes
             applicant.save()
             
-            # Send status update email to applicant
-            email_result = send_status_update_email(
-                applicant_name=applicant.name,
-                applicant_email=applicant.email,
-                job_title=applicant.job.title,
-                new_status=new_status,
-                notes=notes
-            )
+            # Try to send status update email (don't crash if it fails)
+            email_sent = False
+            email_error = None
+            try:
+                email_result = send_status_update_email(
+                    applicant_name=applicant.name,
+                    applicant_email=applicant.email,
+                    job_title=applicant.job.title,
+                    new_status=new_status,
+                    notes=notes
+                )
+                email_sent = email_result.get('success', False)
+                if not email_sent:
+                    email_error = email_result.get('error', 'Unknown error')
+                    logger.warning(f"Email failed for applicant {applicant.id}: {email_error}")
+            except Exception as e:
+                logger.error(f"Email sending exception for applicant {applicant.id}: {str(e)}")
+                email_error = str(e)
             
             response_data = ApplicantSerializer(applicant, context={'request': request}).data
-            response_data['email_sent'] = email_result.get('success', False)
+            response_data['email_sent'] = email_sent
+            if email_error:
+                response_data['email_error'] = email_error
             
             return Response(response_data)
         
@@ -380,25 +395,32 @@ def public_application_create(request):
                     applicant_instance.keywords = ", ".join(ats_result['matched_keywords'][:10])
                     applicant_instance.save()
             except Exception as e:
-                print(f"ATS scoring error: {e}")
+                logger.error(f"ATS scoring error: {e}")
                 # Continue even if scoring fails
             
-            # Send confirmation email to applicant
-            email_result = send_application_confirmation_email(
-                applicant_data={
-                    'name': request.data['name'],
-                    'email': email,
-                },
-                job_title=job.title,
-                applicant_email=email
-            )
+            # Try to send confirmation email (don't crash if it fails)
+            email_sent = False
+            try:
+                email_result = send_application_confirmation_email(
+                    applicant_data={
+                        'name': request.data['name'],
+                        'email': email,
+                    },
+                    job_title=job.title,
+                    applicant_email=email
+                )
+                email_sent = email_result.get('success', False)
+                if not email_sent:
+                    logger.warning(f"Email failed for applicant {applicant_instance.id}: {email_result.get('error', 'Unknown error')}")
+            except Exception as e:
+                logger.error(f"Email sending exception for applicant {applicant_instance.id}: {str(e)}")
             
             return Response(
                 {
                     'success': True,
                     'message': 'Application submitted successfully!',
                     'application_id': serializer.data['id'],
-                    'email_sent': email_result.get('success', False),
+                    'email_sent': email_sent,
                     'match_score': applicant_instance.match_score
                 },
                 status=status.HTTP_201_CREATED
